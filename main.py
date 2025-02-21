@@ -8,6 +8,31 @@ from datetime import datetime
 app = Flask(__name__)
 
 
+@app.route("/",methods=["GET"])
+def root():
+
+    data={
+        "app_name":"Email Notifier",
+        "description":"It notifies the Admin when a username/user is called in a channel at a particular period of time",
+        "type":"Output Integration",
+        "category":"Email & Messaging"
+    }
+
+
+
+    return jsonify(data)
+
+
+
+
+
+
+
+
+
+
+
+
 # Get current date and time
 now = datetime.now()
 
@@ -46,31 +71,48 @@ def send_email(to_email, mention):
 
 
 
-@app.route("/api", methods=["POST"])
+
+
+
+@app.route("/tick", methods=["POST"])
 def detect_mentions():
-    """Detect @mentions in a message"""
-    data = request.json
-    content = data.get("content")
 
     
+    try:
 
-    if not content:
-        return jsonify({"error": "Message content required"}), 400
+        data =request.get_json()
 
-    # Use regex to find words starting with @
-    mentions = re.findall(r"@(\w+)", content)
-     # Find mentions using regex
+        if not data:
+            return jsonify({"error": "Invalid JSON"}), 400
+        
+        # Extract message content (assuming "message" is the key)
+        
+        content = data.get("message")  # Change 'message' to the actual key if different
+        
+        if not content:
+            return jsonify({"error": "Message content required"}), 400
+
+        # Use regex to find words starting with @ (mentions)
+        mentions = re.findall(r"@(\w+)", content)
+        
+        email_status = send_email(admin_mail, mentions)
+
+
+        return jsonify({
+            "status": "success",
+            "message_received": content,
+            "mentions": mentions
+        }), 200
     
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
-    email_status = send_email(admin_mail, mentions)
 
 
 
-    return jsonify({
-        "message": "Mentions detected",
-        "content": content,
-        "mentions": mentions
-    }), 200
+
+
+
 
 
 
@@ -84,7 +126,61 @@ def load_json():
 
 @app.route("/integration.json",methods=['GET'])
 def jsonsetting():
-    return jsonify(load_json())
+    base_url =str(request.base_url).rstrip("/")
+
+
+    return jsonify(
+        {
+            {
+    "data": {
+      "date": {
+        "created_at": "2025-02-21",
+        "updated_at": "2025-02-21"
+      },
+      "descriptions": {
+        "app_name": "Name Notifier",
+        "app_description": "is an integration that detects when a user's name or role is mentioned in a message and sends a notification (email or API alert) to them",
+  "app_logo": "https://www.google.com/imgres?q=name%20notifier%20logo%20for%20api&imgurl=https%3A%2F%2Fwww.shutterstock.com%2Fimage-vector%2Fvector-multi-color-icon-webhook-600w-2545676463.jpg&imgrefurl=https%3A%2F%2Fwww.shutterstock.com%2Fsearch%2Fnotifier-logo&docid=ZHyur4VYW14V1M&tbnid=z1ir3cEwbaHJFM&vet=12ahUKEwi6x46DqNSLAxUQWEEAHWZbLSEQM3oECBsQAA..i&w=600&h=620&hcb=2&itg=1&ved=2ahUKEwi6x46DqNSLAxUQWEEAHWZbLSEQM3oECBsQAA",
+  "app_url": "http://100.25.134.239",
+  "background_color": "#fff"
+  },
+      "integration_category": "Email & Messaging",
+      "is_active": True,
+      "integration_type": "output",
+      "key_features": [
+  "No Backend Required",
+  "Easy Integration",
+  "Real-time Data Submission",
+  "Scalable and Secure",
+  "No Extra Coding Required"
+  ],
+      "author": "Lawal Hussein",
+      "settings": [
+  {
+  "label": "Form Name",
+  "type": "text",
+  "default": "",
+  "required": True
+  },
+  {
+  "label": "Website",
+  "type": "text",
+  "default": "",
+  "required": True
+      }
+  ],
+     
+      "tick_url": f"{base_url}/tick",
+      "target_url": ""
+  }
+   }
+  
+  
+        }
+    )
+
+
+
 
 
 
