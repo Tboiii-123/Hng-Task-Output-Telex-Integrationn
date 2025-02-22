@@ -94,21 +94,26 @@ def send_email(to_email, mention):
 @app.route("/tick", methods=["POST"])
 def detect_mentions():
     try:
-        # Receive the raw string from Telex
-        raw_data = request.data.decode("utf-8")  # Convert bytes to string
+        # Get the request data
+        data = request.get_json()
 
-        if not raw_data:
-            return jsonify({"error": "Empty request body"}), 400
+        if not data:
+            return json.dumps({"message": "Invalid JSON"}), 400  # Serialize response
 
-        # Convert string to JSON (Deserialize)
-        try:
-            data = json.loads(raw_data)  # Convert JSON string to Python dict
-        except Exception as e:
-            return jsonify({"error": "Invalid JSON format"}), 400
-
-        # Extract message content
+        # Extract content
         content = data.get("message") or data.get("content")
         settings = data.get("settings", [])
+
+        if not content:
+            return json.dumps({"message": "Message content required"}), 400  # Serialize response
+
+        # Extract mentions using regex
+        mentions = re.findall(r"@(\w+)", content)
+
+        if mentions:
+            # Start a new thread to send email (Non-blocking)
+            thread = threading.Thread(target=send_email, args=(admin_mail, mentions))
+            thread.start()
 
         # Process settings
         processed_settings = [
@@ -121,37 +126,27 @@ def detect_mentions():
             for setting in settings
         ]
 
-        if not content:
-            return jsonify({"error": "Message content required"}), 400
-
-        # Detect mentions using regex
-        mentions = re.findall(r"@(\w+)", content)
-
-        # If mentions exist, send an email in a separate thread
-        if mentions:
-            thread = threading.Thread(target=send_email, args=(admin_mail, mentions))
-            thread.start()
-
-        # Construct the response
+        # Create response dictionary
         response = {
             "message": content,
             "settings": processed_settings,
-            "mentions": mentions
         }
 
-        return jsonify(response), 200
+        # Serialize response as a JSON string
+        serialized_response = json.dumps(response)
 
+        # Return the serialized string
+        return serialized_response, 200  # Instead of jsonify()
+    
     except Exception as e:
-
-        return jsonify({"error": str(e)}), 500
-
+        return json.dumps({"message": str(e)}), 500  # Ensure error response is a string
 
 
 
 
 
 
-
+ 
 
 @app.route("/integration.json",methods=['GET'])
 def jsonsetting():
