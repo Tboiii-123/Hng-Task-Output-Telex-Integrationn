@@ -129,13 +129,16 @@ def detect_mentions():
         # Use regex to find words starting with @ (mentions)
         mentions = re.findall(r"@(\w+)", content)
 
+        if mentions:
+
         
-        thread = threading.Thread(target=send_email, args=(admin_mail, mentions))
-        thread.start()
+            thread = threading.Thread(target=send_email, args=(admin_mail, mentions))
+            thread.start()
+            
 
         response = {
-            "message_received": content,
-            "processed_settings": processed_settings
+            "message": content,
+            "settings": processed_settings
         }
 
         serialized_response =json.dumps(response)
