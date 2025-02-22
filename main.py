@@ -105,6 +105,22 @@ def detect_mentions():
         # Extract message content (assuming "message" is the key)
         
         content = data.get("message") or data.get('content')
+        settings = data.get("settings", [])
+
+        # Process settings if needed
+        processed_settings = []
+        for setting in settings:
+            label = setting.get("label", "Unknown Label")
+            setting_type = setting.get("type", "Unknown Type")
+            default_value = setting.get("default", "")
+            required = setting.get("required", False)
+
+            processed_settings.append({
+                "label": label,
+                "type": setting_type,
+                "default": default_value,
+                "required": required
+            })
 
         
         if not content:
@@ -117,12 +133,14 @@ def detect_mentions():
         thread = threading.Thread(target=send_email, args=(admin_mail, mentions))
         thread.start()
 
+        response = {
+            "message_received": content,
+            "processed_settings": processed_settings
+        }
 
 
         return jsonify({
-            "status": "success",
-            "message_received": content,
-            "mentions": mentions
+            response
         }), 200
     
     except Exception as e:
@@ -181,7 +199,7 @@ def jsonsetting():
             }
         ],
         "tick_url": "https://hng-task-output-telex-integrationn.onrender.com/tick",
-        "target_url": ""
+        
     }
 }
 
