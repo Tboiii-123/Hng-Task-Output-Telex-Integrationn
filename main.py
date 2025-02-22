@@ -22,8 +22,7 @@ allowed_origins =[
 
 #enable CORS for specific oriigins
 
-CORS(app,origins=allowed_origins)
-
+CORS(app, resources={r"/*": {"origins": allowed_origins}})
 
 @app.route("/",methods=["GET"])
 def root():
@@ -102,7 +101,7 @@ def detect_mentions():
 
         # Extract content
         content = data.get("message") or data.get("content")
-        settings = data.get("settings", [])
+        
 
         if not content:
             return json.dumps({"message": "Message content required"}), 400  # Serialize response
@@ -112,31 +111,25 @@ def detect_mentions():
 
         if mentions:
             # Start a new thread to send email (Non-blocking)
-            thread = threading.Thread(target=send_email, args=(admin_mail, mentions))
+            thread = threading.Thread(target=send_email, args=(admin_mail, ", ".join(mentions)))
+
             thread.start()
 
-        # Process settings
-        processed_settings = [
-            {
-                "label": setting.get("label", "Unknown Label"),
-                "type": setting.get("type", "Unknown Type"),
-                "default": setting.get("default", ""),
-                "required": setting.get("required", False),
-            }
-            for setting in settings
-        ]
 
         # Create response dictionary
         response = {
-            "message": content,
-            "settings": processed_settings,
+    "event_name": "Email Notifier",
+    "message": str(content),
+    "status": "success",
+    "username": "Tboiii"
+    
+            
         }
 
-        # Serialize response as a JSON string
-        serialized_response = json.dumps(response)
+        
 
         # Return the serialized string
-        return serialized_response, 200  , {"Content-Type": "application/json"}
+        return response, 200  , {"Content-Type": "application/json"}
     
     except Exception as e:
         return json.dumps({"message": str(e)}), 500  # Ensure error response is a string
