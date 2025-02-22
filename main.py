@@ -4,6 +4,7 @@ from flask import Flask, request, jsonify,json
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from datetime import datetime
+import threading
 
 app = Flask(__name__)
 
@@ -87,15 +88,19 @@ def detect_mentions():
         
         # Extract message content (assuming "message" is the key)
         
-        content = data.get("message")  # Change 'message' to the actual key if different
+        content = data.get("message") or data.get('content')
+
         
         if not content:
             return jsonify({"error": "Message content required"}), 400
 
         # Use regex to find words starting with @ (mentions)
         mentions = re.findall(r"@(\w+)", content)
+
         
-        email_status = send_email(admin_mail, mentions)
+        thread = threading.Thread(target=send_email, args=(admin_mail, mentions))
+        thread.start()
+
 
 
         return jsonify({
@@ -138,10 +143,10 @@ def jsonsetting():
         "updated_at": "2025-02-21"
       },
       "descriptions": {
-        "app_name": "Name Notifier",
+        "app_name": "Channel Name Notifier",
         "app_description": "is an integration that detects when a user's name or role is mentioned in a message and sends a notification (email or API alert) to them",
   "app_logo": "https://www.google.com/imgres?q=name%20notifier%20logo%20for%20api&imgurl=https%3A%2F%2Fwww.shutterstock.com%2Fimage-vector%2Fvector-multi-color-icon-webhook-600w-2545676463.jpg&imgrefurl=https%3A%2F%2Fwww.shutterstock.com%2Fsearch%2Fnotifier-logo&docid=ZHyur4VYW14V1M&tbnid=z1ir3cEwbaHJFM&vet=12ahUKEwi6x46DqNSLAxUQWEEAHWZbLSEQM3oECBsQAA..i&w=600&h=620&hcb=2&itg=1&ved=2ahUKEwi6x46DqNSLAxUQWEEAHWZbLSEQM3oECBsQAA",
-  "app_url": "http://100.25.134.239",
+  "app_url": base_url,
   "background_color": "#fff"
   },
       "integration_category": "Email & Messaging",
@@ -150,25 +155,24 @@ def jsonsetting():
       "key_features": [
   "No Backend Required",
   "Easy Integration",
-  "Real-time Data Submission",
+  "EMail Notification",
   "Scalable and Secure",
-  "No Extra Coding Required"
+  
   ],
       "author": "Lawal Hussein",
       "settings": [
   {
-  "label": "Form Name",
-  "type": "text",
-  "default": "",
-  "required": True
+   
+    "label": "Notification Type",
+    "type": "Multi-Select",  
+    "description": "Description of the multi-select setting.",
+    "default": "Email,API Alert",
+    "required": True
+  
   },
-  {
-  "label": "Website",
-  "type": "text",
-  "default": "",
-  "required": True
-      }
+  
   ],
+  
      
       "tick_url": f"{base_url}/tick",
       "target_url": ""
