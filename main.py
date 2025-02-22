@@ -139,9 +139,8 @@ def detect_mentions():
         }
 
 
-        return jsonify({
-            response
-        }), 200
+        return jsonify(
+            response), 200
     
     except Exception as e:
         return jsonify({"error": str(e)}), 500
