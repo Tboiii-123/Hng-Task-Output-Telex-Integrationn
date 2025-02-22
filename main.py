@@ -124,10 +124,6 @@ def detect_mentions():
 
 
 
-def load_json():
-    with open("integration.json", "r") as file:
-        data = json.load(file)
-    return data
 
 @app.route("/integration.json",methods=['GET'])
 def jsonsetting():
@@ -135,52 +131,45 @@ def jsonsetting():
 
 
     return jsonify(
-        {
+        
             {
     "data": {
-      "date": {
-        "created_at": "2025-02-21",
-        "updated_at": "2025-02-21"
-      },
-      "descriptions": {
-        "app_name": "Channel Name Notifier",
-        "app_description": "is an integration that detects when a user's name or role is mentioned in a message and sends a notification (email or API alert) to them",
-  "app_logo": "https://www.google.com/imgres?q=name%20notifier%20logo%20for%20api&imgurl=https%3A%2F%2Fwww.shutterstock.com%2Fimage-vector%2Fvector-multi-color-icon-webhook-600w-2545676463.jpg&imgrefurl=https%3A%2F%2Fwww.shutterstock.com%2Fsearch%2Fnotifier-logo&docid=ZHyur4VYW14V1M&tbnid=z1ir3cEwbaHJFM&vet=12ahUKEwi6x46DqNSLAxUQWEEAHWZbLSEQM3oECBsQAA..i&w=600&h=620&hcb=2&itg=1&ved=2ahUKEwi6x46DqNSLAxUQWEEAHWZbLSEQM3oECBsQAA",
-  "app_url": base_url,
-  "background_color": "#fff"
-  },
-      "integration_category": "Email & Messaging",
-      "is_active": True,
-      "integration_type": "output",
-      "key_features": [
-  "No Backend Required",
-  "Easy Integration",
-  "EMail Notification",
-  "Scalable and Secure",
+        "date": {
+            "created_at": "2025-02-21",
+            "updated_at": "2025-02-21"
+        },
+        "descriptions": {
+            "app_name": "Channel Name Notifier",
+            "app_description": "is an integration that detects when a user's name or role is mentioned in a message and sends a notification (email or API alert) to them",
+            "app_logo": "https://www.google.com/imgres?q=name%20notifier%20logo%20for%20api&imgurl=https%3A%2F%2Fwww.shutterstock.com%2Fimage-vector%2Fvector-multi-color-icon-webhook-600w-2545676463.jpg&imgrefurl=https%3A%2F%2Fwww.shutterstock.com%2Fsearch%2Fnotifier-logo&docid=ZHyur4VYW14V1M&tbnid=z1ir3cEwbaHJFM&vet=12ahUKEwi6x46DqNSLAxUQWEEAHWZbLSEQM3oECBsQAA..i&w=600&h=620&hcb=2&itg=1&ved=2ahUKEwi6x46DqNSLAxUQWEEAHWZbLSEQM3oECBsQAA",
+            "app_url": base_url,
+            "background_color": "#fff"
+        },
+        "integration_category": "Email & Messaging",
+        "is_active": True,
+        "integration_type": "output",
+        "key_features": [
+            "No Backend Required",
+            "Easy Integration",
+            "Email Notification",
+            "Scalable and Secure"
+        ],
+        "author": "Lawal Hussein",
+        "settings": [
+            {
+                "label": "Notification Type",
+                "type": "Multi-Select",
+                "description": "Description of the multi-select setting.",
+                "default": "Email,API Alert",
+                "required": True
+            }
+        ],
+        "tick_url": f"{base_url}/tick",
+        "target_url": ""
+    }
+}
+
   
-  ],
-      "author": "Lawal Hussein",
-      "settings": [
-  {
-   
-    "label": "Notification Type",
-    "type": "Multi-Select",  
-    "description": "Description of the multi-select setting.",
-    "default": "Email,API Alert",
-    "required": True
-  
-  },
-  
-  ],
-  
-     
-      "tick_url": f"{base_url}/tick",
-      "target_url": ""
-  }
-   }
-  
-  
-        }
     )
 
 
