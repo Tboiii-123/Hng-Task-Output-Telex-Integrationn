@@ -138,9 +138,10 @@ def detect_mentions():
             "processed_settings": processed_settings
         }
 
+        serialized_response =json.dumps(response)
 
         return jsonify(
-            response), 200
+            serialized_response), 200
     
     except Exception as e:
         return jsonify({"error": str(e)}), 500
