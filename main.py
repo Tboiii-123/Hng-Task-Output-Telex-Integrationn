@@ -40,27 +40,20 @@ def root():
 
 
 
-
-# Get current date and time
-now = datetime.now()
-
-# Format it as a string
-formatted_time = now.strftime("%Y-%m-%d %H:%M:%S")
-
-print("Current Date and Time:", formatted_time)
-
-admin_mail ='lawalhussein775@gmail.com'
 # Email Configuration
 SMTP_SERVER = "smtp.gmail.com"
 SMTP_PORT = 587
 EMAIL_SENDER = "joshhearns37@gmail.com"
-EMAIL_PASSWORD = "roue egvy bumj wkez"  # Use App Password if 2FA is enabled
+EMAIL_PASSWORD = "roue egvy bumj wkez"  # Use an App Password if 2FA is enabled
+ADMIN_EMAIL = "lawalhussein775@gmail.com"
 
-def send_email(to_email, mention):
-    """Send a dummy email notification"""
-    subject = f"Notification: You were mentioned!"
-    body = f"Hello {mention},\n\nYou were mentioned in a message!\n\nBest,\nYour App"
-    body=f"Hello Admin. {mention} was mentioned in the channel by {formatted_time} time"
+async def send_email(to_email, mention):
+    """Send an email notification asynchronously."""
+    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    
+    subject = "Notification: You were mentioned!"
+    body = f"Hello Admin,\n\n{mention} was mentioned in the channel at {now}.\n\nBest,\nYour App"
+    
     msg = MIMEMultipart()
     msg["From"] = EMAIL_SENDER
     msg["To"] = to_email
@@ -73,34 +66,30 @@ def send_email(to_email, mention):
         server.login(EMAIL_SENDER, EMAIL_PASSWORD)
         server.sendmail(EMAIL_SENDER, to_email, msg.as_string())
         server.quit()
-        return f"Email sent to {to_email}"
+        print(f"Email sent to {to_email}")
     except Exception as e:
-        return f"Failed to send email: {str(e)}"
+        print(f" Failed to send email: {str(e)}")
 
-
-
-
-
- 
 async def process_mentions(message):
-    """Process message content and extract mentions asynchronously."""
+    """Process mentions and send email notifications asynchronously."""
     mentions = re.findall(r"@(\w+)", message)
 
     if not mentions:
         return {"status": "No mentions found"}
 
-    # Simulate async processing (e.g., storing in DB, notifying users)
-    await asyncio.sleep(2)  # Simulating delay
+    # Send an email for each mention
+    for mention in mentions:
+        await send_email(ADMIN_EMAIL, mention)
 
     response_data = {
         "event_name": "Email Notifier",
-        "message": str(message),
+        "message": message,
         "status": "success",
         "username": "Tboiii",
         
     }
 
-    print("Processed Data:", response_data)  # Debugging
+    print("Processed Data:", response_data)
     return response_data
 
 def background_task(payload):
@@ -123,6 +112,9 @@ def detect_mentions():
 
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
+    
+
+
 
 
 @app.route("/integration.json",methods=['GET'])
