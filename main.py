@@ -93,66 +93,57 @@ def send_email(to_email, mention):
 
 @app.route("/tick", methods=["POST"])
 def detect_mentions():
-
-    
     try:
+        # Receive the raw string from Telex
+        raw_data = request.data.decode("utf-8")  # Convert bytes to string
 
-        data =request.get_json()
+        if not raw_data:
+            return jsonify({"error": "Empty request body"}), 400
 
-        if not data:
-            return jsonify({"error": "Invalid JSON"}), 400
-        
-        # Extract message content (assuming "message" is the key)
-        
-        content = data.get("message") or data.get('content')
+        # Convert string to JSON (Deserialize)
+        try:
+            data = json.loads(raw_data)  # Convert JSON string to Python dict
+        except Exception as e:
+            return jsonify({"error": "Invalid JSON format"}), 400
+
+        # Extract message content
+        content = data.get("message") or data.get("content")
         settings = data.get("settings", [])
 
-        # Process settings if needed
-        processed_settings = []
-        for setting in settings:
-            label = setting.get("label", "Unknown Label")
-            setting_type = setting.get("type", "Unknown Type")
-            default_value = setting.get("default", "")
-            required = setting.get("required", False)
+        # Process settings
+        processed_settings = [
+            {
+                "label": setting.get("label", "Unknown Label"),
+                "type": setting.get("type", "Unknown Type"),
+                "default": setting.get("default", ""),
+                "required": setting.get("required", False),
+            }
+            for setting in settings
+        ]
 
-            processed_settings.append({
-                "label": label,
-                "type": setting_type,
-                "default": default_value,
-                "required": required
-            })
-
-        
         if not content:
             return jsonify({"error": "Message content required"}), 400
 
-        # Use regex to find words starting with @ (mentions)
+        # Detect mentions using regex
         mentions = re.findall(r"@(\w+)", content)
 
+        # If mentions exist, send an email in a separate thread
         if mentions:
-
-        
             thread = threading.Thread(target=send_email, args=(admin_mail, mentions))
             thread.start()
-            
 
+        # Construct the response
         response = {
             "message": content,
-            "settings": processed_settings
+            "settings": processed_settings,
+            "mentions": mentions
         }
 
-        serialized_response =json.dumps(response)
+        return jsonify(response), 200
 
-        return jsonify(
-            serialized_response), 200
-    
     except Exception as e:
+
         return jsonify({"error": str(e)}), 500
-
-
-
-
-
 
 
 
