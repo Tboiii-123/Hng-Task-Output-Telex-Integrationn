@@ -1,44 +1,16 @@
 import re
 import smtplib
-from flask import Flask, request, jsonify,json
+import threading
+import asyncio
+import httpx
+from datetime import datetime
+from flask import Flask, request, jsonify
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-from datetime import datetime
-import threading
 from flask_cors import CORS
-import asyncio
 
 app = Flask(__name__)
-
-
-
 CORS(app, origins=["*"], supports_credentials=True, methods=["GET", "POST", "PUT"])
-
-
-
-@app.route("/",methods=["GET"])
-def root():
-
-    data={
-        "app_name":"Email Notifier",
-        "description":"It notifies the Admin when a username/user is called in a channel at a particular period of time",
-        "type":"Output Integration",
-        "category":"Email & Messaging"
-    }
-
-
-
-    return jsonify(data)
-
-
-
-
-
-
-
-
-
-
 
 # Email Configuration
 SMTP_SERVER = "smtp.gmail.com"
@@ -46,6 +18,15 @@ SMTP_PORT = 587
 EMAIL_SENDER = "joshhearns37@gmail.com"
 EMAIL_PASSWORD = "roue egvy bumj wkez"  # Use an App Password if 2FA is enabled
 ADMIN_EMAIL = "lawalhussein775@gmail.com"
+
+@app.route("/", methods=["GET"])
+def root():
+    return jsonify({
+        "app_name": "Email Notifier",
+        "description": "It notifies the Admin when a username/user is called in a channel at a particular period of time",
+        "type": "Output Integration",
+        "category": "Email & Messaging"
+    })
 
 async def send_email(to_email, mention):
     """Send an email notification asynchronously."""
@@ -68,16 +49,15 @@ async def send_email(to_email, mention):
         server.quit()
         print(f"Email sent to {to_email}")
     except Exception as e:
-        print(f" Failed to send email: {str(e)}")
+        print(f"Failed to send email: {str(e)}")
 
-async def process_mentions(message):
-    """Process mentions and send email notifications asynchronously."""
+async def process_mentions(message, return_url):
+    """Process mentions, send email notifications, and post data back."""
     mentions = re.findall(r"@(\w+)", message)
 
     if not mentions:
         return {"status": "No mentions found"}
 
-    # Send an email for each mention
     for mention in mentions:
         await send_email(ADMIN_EMAIL, mention)
 
@@ -86,15 +66,24 @@ async def process_mentions(message):
         "message": message,
         "status": "success",
         "username": "Tboiii",
-        
     }
 
     print("Processed Data:", response_data)
+
+    # Post data back to the provided return URL
+    if return_url:
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.post(return_url, json=response_data)
+                print(f"Data posted to {return_url}: {response.status_code}")
+        except Exception as e:
+            print(f"Failed to post data: {str(e)}")
+
     return response_data
 
 def background_task(payload):
-    """Wrapper to run async function in a separate thread."""
-    asyncio.run(process_mentions(payload["message"]))
+    """Run async function in a separate thread."""
+    asyncio.run(process_mentions(payload["message"], payload.get("return_url", "")))
 
 @app.route("/tick", methods=["POST"])
 def detect_mentions():
@@ -104,7 +93,6 @@ def detect_mentions():
         if not data or "message" not in data:
             return jsonify({"message": "Invalid or missing message"}), 400
 
-        # Run in the background
         thread = threading.Thread(target=background_task, args=(data,))
         thread.start()
 
@@ -112,77 +100,41 @@ def detect_mentions():
 
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
-    
 
-
-
-
-@app.route("/integration.json",methods=['GET'])
+@app.route("/integration.json", methods=['GET'])
 def jsonsetting():
-    base_url =str(request.base_url).rstrip("/")
-
-
-    return jsonify(
-        
-            {
-    "data": {
-        "date": {
-            "created_at": "2025-02-21",
-            "updated_at": "2025-02-21"
-        },
-        "descriptions": {
-            "app_name": "Channel Name Notifier",
-            "app_description": "is an integration that detects when a user's name or role is mentioned in a message and sends a notification (email or API alert) to them",
-            
-            "app_logo": "https://thenounproject.com/icon/mail-681630.png",
-
-
-            
-            "app_url":"https://hng-task-output-telex-integrationn.onrender.com",
-
-            "background_color": "#fff"
-        },
-        "integration_category": "Email & Messaging",
-        "is_active": True,
-        "integration_type": "output",
-        "key_features": [
-            "No Backend Required",
-            "Easy Integration",
-            "Email Notification",
-            "Scalable and Secure"
-        ],
-        "author": "Lawal Hussein",
-        "settings": [
-            {
-                "label": "Notification Type",
-                "type": "Multi-Select",
-                "description": "Description of the multi-select setting.",
-                "default": "Email,API Alert",
-                "required": True
-            }
-        ],
-        "tick_url": "https://hng-task-output-telex-integrationn.onrender.com/tick",
-        
-    }
-}
-
-  
-    )
-
-
-
-
-
-
-
-
-
-
-
-
+    return jsonify({
+        "data": {
+            "date": {"created_at": "2025-02-21", "updated_at": "2025-02-21"},
+            "descriptions": {
+                "app_name": "Channel Name Notifier",
+                "app_description": "Detects when a user's name or role is mentioned in a message and sends a notification.",
+                "app_logo": "https://thenounproject.com/icon/mail-681630.png",
+                "app_url": "https://hng-task-output-telex-integrationn.onrender.com",
+                "background_color": "#fff"
+            },
+            "integration_category": "Email & Messaging",
+            "is_active": True,
+            "integration_type": "output",
+            "key_features": [
+                "No Backend Required",
+                "Easy Integration",
+                "Email Notification",
+                "Scalable and Secure"
+            ],
+            "author": "Lawal Hussein",
+            "settings": [
+                {
+                    "label": "Notification Type",
+                    "type": "Multi-Select",
+                    "description": "Description of the multi-select setting.",
+                    "default": "Email,API Alert",
+                    "required": True
+                }
+            ],
+            "tick_url": "https://hng-task-output-telex-integrationn.onrender.com/tick",
+        }
+    })
 
 if __name__ == '__main__':
     app.run(debug=True)
-
-
-
