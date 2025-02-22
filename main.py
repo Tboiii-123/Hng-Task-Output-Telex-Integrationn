@@ -136,7 +136,7 @@ def detect_mentions():
         serialized_response = json.dumps(response)
 
         # Return the serialized string
-        return serialized_response, 200  # Instead of jsonify()
+        return serialized_response, 200  , {"Content-Type": "application/json"}
     
     except Exception as e:
         return json.dumps({"message": str(e)}), 500  # Ensure error response is a string
