@@ -6,23 +6,15 @@ from email.mime.multipart import MIMEMultipart
 from datetime import datetime
 import threading
 from flask_cors import CORS
+import asyncio
 
 app = Flask(__name__)
 
 
 
-#List of alllowed origins
-allowed_origins =[
-    "https://telex.im",
-    "https://staging.telex.im",
-    "https://telextest.im",
-    "https://staging.telextest.im",
-    
-]
+CORS(app, origins=["*"], supports_credentials=True, methods=["GET", "POST", "PUT"])
 
-#enable CORS for specific oriigins
 
-CORS(app, resources={r"/*": {"origins": allowed_origins}})
 
 @app.route("/",methods=["GET"])
 def root():
@@ -89,57 +81,49 @@ def send_email(to_email, mention):
 
 
 
+ 
+async def process_mentions(message):
+    """Process message content and extract mentions asynchronously."""
+    mentions = re.findall(r"@(\w+)", message)
+
+    if not mentions:
+        return {"status": "No mentions found"}
+
+    # Simulate async processing (e.g., storing in DB, notifying users)
+    await asyncio.sleep(2)  # Simulating delay
+
+    response_data = {
+        "event_name": "Email Notifier",
+        "message": str(message),
+        "status": "success",
+        "username": "Tboiii",
+        
+    }
+
+    print("Processed Data:", response_data)  # Debugging
+    return response_data
+
+def background_task(payload):
+    """Wrapper to run async function in a separate thread."""
+    asyncio.run(process_mentions(payload["message"]))
 
 @app.route("/tick", methods=["POST"])
 def detect_mentions():
+    """Handles incoming POST requests and triggers background processing."""
     try:
-        # Get the request data
         data = request.get_json()
+        if not data or "message" not in data:
+            return jsonify({"message": "Invalid or missing message"}), 400
 
-        if not data:
-            return json.dumps({"message": "Invalid JSON"}), 400  # Serialize response
+        # Run in the background
+        thread = threading.Thread(target=background_task, args=(data,))
+        thread.start()
 
-        # Extract content
-        content = data.get("message") or data.get("content")
-        
+        return jsonify({"status": "Accepted", "message": "Processing in background"}), 202
 
-        if not content:
-            return json.dumps({"message": "Message content required"}), 400  # Serialize response
-
-        # Extract mentions using regex
-        mentions = re.findall(r"@(\w+)", content)
-
-        if mentions:
-            # Start a new thread to send email (Non-blocking)
-            thread = threading.Thread(target=send_email, args=(admin_mail, ", ".join(mentions)))
-
-            thread.start()
-
-
-        # Create response dictionary
-        response = {
-    "event_name": "Email Notifier",
-    "message": str(content),
-    "status": "success",
-    "username": "Tboiii"
-    
-            
-        }
-
-        
-
-        # Return the serialized string
-        return response, 200  , {"Content-Type": "application/json"}
-    
     except Exception as e:
-        return json.dumps({"message": str(e)}), 500  # Ensure error response is a string
+        return jsonify({"status": "error", "message": str(e)}), 500
 
-
-
-
-
-
- 
 
 @app.route("/integration.json",methods=['GET'])
 def jsonsetting():
