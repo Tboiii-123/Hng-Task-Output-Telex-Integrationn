@@ -5,8 +5,24 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from datetime import datetime
 import threading
+from flask_cors import CORS
 
 app = Flask(__name__)
+
+
+
+#List of alllowed origins
+allowed_origins =[
+    "https://telex.im",
+    "https://staging.telex.im",
+    "https://telextest.im",
+    "https://staging.telextest.im",
+    
+]
+
+#enable CORS for specific oriigins
+
+CORS(app,origins=allowed_origins)
 
 
 @app.route("/",methods=["GET"])
@@ -142,7 +158,7 @@ def jsonsetting():
             "app_name": "Channel Name Notifier",
             "app_description": "is an integration that detects when a user's name or role is mentioned in a message and sends a notification (email or API alert) to them",
             "app_logo": "https://www.google.com/imgres?q=name%20notifier%20logo%20for%20api&imgurl=https%3A%2F%2Fwww.shutterstock.com%2Fimage-vector%2Fvector-multi-color-icon-webhook-600w-2545676463.jpg&imgrefurl=https%3A%2F%2Fwww.shutterstock.com%2Fsearch%2Fnotifier-logo&docid=ZHyur4VYW14V1M&tbnid=z1ir3cEwbaHJFM&vet=12ahUKEwi6x46DqNSLAxUQWEEAHWZbLSEQM3oECBsQAA..i&w=600&h=620&hcb=2&itg=1&ved=2ahUKEwi6x46DqNSLAxUQWEEAHWZbLSEQM3oECBsQAA",
-            "app_url": base_url,
+            "app_url":"https://hng-task-output-telex-integrationn.onrender.com",
             "background_color": "#fff"
         },
         "integration_category": "Email & Messaging",
@@ -164,7 +180,7 @@ def jsonsetting():
                 "required": True
             }
         ],
-        "tick_url": f"{base_url}/tick",
+        "tick_url": "https://hng-task-output-telex-integrationn.onrender.com/tick",
         "target_url": ""
     }
 }
