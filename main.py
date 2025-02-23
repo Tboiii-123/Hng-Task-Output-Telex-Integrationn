@@ -8,15 +8,22 @@ from flask import Flask, request, jsonify
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from flask_cors import CORS
+from dotenv import load_dotenv
+import os
 
 app = Flask(__name__)
 CORS(app, origins=["*"], supports_credentials=True, methods=["GET", "POST", "PUT"])
+
+load_dotenv()
+
+passowrd =os.getenv('PASSWORD')
+
 
 # Email Configuration
 SMTP_SERVER = "smtp.gmail.com"
 SMTP_PORT = 587
 EMAIL_SENDER = "joshhearns37@gmail.com"
-EMAIL_PASSWORD = "roue egvy bumj wkez"  # Use an App Password if 2FA is enabled
+EMAIL_PASSWORD = passowrd # Use an App Password if 2FA is enabled
 ADMIN_EMAIL = "lawalhussein775@gmail.com"
 
 @app.route("/", methods=["GET"])
